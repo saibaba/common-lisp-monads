@@ -85,7 +85,7 @@
 (defun m-state-bind (v f)
   (lambda (s)
     (let* (
-           (result (apply v (list s)))
+           (result (apply v (list s)))   ; i should use gensym to avoid serious bugs!
            (new-st (second result))
            (val    (first result)))
       (apply (apply f (list val)) (list new-st)))))
