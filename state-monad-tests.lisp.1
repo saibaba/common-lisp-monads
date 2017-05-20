@@ -1,0 +1,78 @@
+(in-package :monads-tests)
+
+
+; state functions (returns a function that takes state and returns value and state)
+; alist stores state
+
+(defun fetch-val (key)
+  (lambda (s) (list (cdr (assoc key s :test 'equal)) s)))
+
+(defun set-val (key val)
+  (lambda (s)
+    (let* (
+           (old-val (assoc key s :test 'equal))
+           (new-s   (acons key val s)))
+      (list old-val new-s))))
+
+(defun state-naive ()
+  (let* (
+         (init-state            '((:a . 1) (:b . 2)))
+         (from-state-and-val    (apply (fetch-val :b) (list init-state)))
+         (from-val              (first from-state-and-val))
+         (from-state            (second from-state-and-val))
+         (old-state-and-to-val  (apply (set-val :a from-val) (list init-state)))
+         (old-to-val            (first old-state-and-to-val))
+         (final-state           (second old-state-and-to-val)))
+    final-state))
+
+(define-test state-naive-test
+  (assert-equal '((:A . 2) (:A . 1) (:B . 2))
+    (state-naive)))
+
+(defun state-fun-expr()
+  (
+  (lambda (init-state) 
+    ( (lambda (from-state-and-val)
+        (let* (
+               (from-val (first from-state-and-val))
+               (from-state (second from-state-and-val)))
+          ( (lambda (old-state-and-to-val)
+              (let* (
+                     (old-to-val (first old-state-and-to-val))
+                     (final-state (second old-state-and-to-val)))
+                 final-state) )
+              (apply (set-val :a from-val) (list init-state)))))
+        (apply (fetch-val :b) (list init-state)) )) '((:a . 1) (:b . 2))))
+
+(define-test state-fun-expr-test
+  (assert-equal '((:A . 2) (:A . 1) (:B . 2))
+    (state-fun-expr)))
+
+(defun m-state-bind (v f)
+  (apply f (list v)))
+
+(defun state-bind-expr()
+  (m-state-bind '((:a . 1) (:b . 2))         (lambda (init-state) 
+  (m-state-bind (apply (fetch-val :b)        (list init-state))   (lambda (from-state-and-val) (let* ( (from-val (first from-state-and-val)) (from-state (second from-state-and-val))) 
+  (m-state-bind (apply (set-val :a from-val) (list init-state))   (lambda (old-state-and-to-val) (let* ( (old-to-val (first old-state-and-to-val)) (final-state (second old-state-and-to-val)))
+                final-state          )))))))))
+
+(define-test state-bind-expr-test
+  (assert-equal '((:A . 2) (:A . 1) (:B . 2))
+    (state-bind-expr)))
+
+(defun copy-val (fv tv)
+  (do-monad monads:state-m
+    [ from-val   (fetch-val fv)
+      old-to-val (set-val tv from-val) ]
+    old-to-val))
+
+(defun state-monad-example ()
+  (let* (
+         (initial-state  '((:a . 1) (:b . 2)))
+         (computation    (copy-val :b :a))
+         (r              (computation initial-state))
+         (result         (first r))
+         (final-state    (second r)))
+    final-state))
+
