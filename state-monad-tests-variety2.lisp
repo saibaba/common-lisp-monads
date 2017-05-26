@@ -108,7 +108,7 @@
     (second (variety2-state-with-bind-1 '((:a . 1) (:b . 2))))))
 
 ;;;; progression 2 (sc = state computation)
-(defun state-return (v)
+(defun state-return-2 (v)
   (lambda (s) (list v s)))
 
 (defun state-bind-2 (sc f)
@@ -123,9 +123,10 @@
   (apply (state-bind-2 (fetch-val :b)
       (lambda (from-val)
         (state-bind-2 (set-val :a from-val)
-          (lambda (old-to-val) (state-return old-to-val))))) (list start-state)))
+          (lambda (old-to-val) (state-return-2 old-to-val))))) (list start-state)))
 
-; now just use do-monad on above return/bind-2
+; now just use do-monad on above return-2/bind-2
 (define-test variety2-state-with-bind-2-test
   (assert-equal '((:A . 2) (:A . 1) (:B . 2))
     (second (variety2-state-with-bind-2 '((:a . 1) (:b . 2))))))
+

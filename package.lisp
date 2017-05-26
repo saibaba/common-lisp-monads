@@ -16,6 +16,6 @@
   (:use #:cl))
 
 (defpackage :monads-tests
-  (:export #:inc #:nullifier)
+  (:export #:inc #:nullifier #:test-state-m #:state-return-2 #:state-bind-2)
   (:use :common-lisp :lisp-unit :monads))
 
