@@ -12,5 +12,6 @@
                (:file "sequence-monad-tests")
                (:file "state-monad-tests-variety2")
                (:file "state-monad-tests")
+               (:file "m-lift-tests")
                (:file "knight-quest")))
 

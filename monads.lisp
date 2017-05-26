@@ -45,8 +45,11 @@
     (apply f (list v))
     nil))
 
+(defun m-maybe-return (x)
+  (id x))
+
 (defun maybe-m ()
-  (list 'id 'm-maybe-bind))
+  (list 'm-maybe-return 'm-maybe-bind))
 
 ; sequence
 (defun really-flatten (li)
@@ -96,3 +99,32 @@
 (defun state-m()
   (list 'm-state-return 'm-state-bind))
 
+; m-lift
+(defun repeat (f y)
+  (if (zerop y)
+    nil
+    (cons (apply f (list)) (repeat f (1- y)))))
+
+(defun gensyms (c)
+  (repeat 'gensym c))
+
+(defun odd-items (l)
+  (loop :for c :in l :by #'cddr :collect c))
+
+(defun even-items (l)
+  (loop :for c :in (cdr l) :by #'cddr :collect c))
+
+(defmacro do-lift (m f nargs)
+  (let* (
+         (mr (apply m ()))
+         (ret (first mr))
+         (bind (car (last mr)))
+         (items (gensyms (* 2 nargs)))
+         (d1 (format t "2* variables: ~A~%" items))
+         (nl (even-items items))
+         (body `(,f ,@nl ))
+         (d (format t "body: ~A~%" body))
+         (bindings (reverse items))
+         (expr `(apply ',ret (list ,body))))
+    (progn
+      `(lambda ,nl ,(prepare expr bindings bind) ) )))
